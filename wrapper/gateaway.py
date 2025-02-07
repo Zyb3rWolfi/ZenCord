@@ -2,6 +2,7 @@ import asyncio
 import websockets
 import aiohttp
 import json
+from .guild import Guild
 
 class DiscordGateaway:
 
@@ -12,6 +13,7 @@ class DiscordGateaway:
         self.session_id = None
         self.on_message_callback = on_message_callback
         self.bot_id = None
+        self.guilds = {}
     
     # Connect to the discord gateaway
     async def connect(self):
@@ -55,6 +57,10 @@ class DiscordGateaway:
         elif data["t"] == "MESSAGE_CREATE": # Message created event
             if self.on_message_callback:
                 await self.on_message_callback(data["d"])
+        elif data["t"] == "GUILD_CREATE":
+            guild = Guild(data["d"])
+            self.guilds[guild.id] = guild
+
     
     # Manages the heartbeat between the bot and Discord
     async def heartbeat(self, ws, interval):

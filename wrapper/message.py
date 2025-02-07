@@ -5,9 +5,9 @@ class Message:
         self.content = message_json["content"]
         self.id = message_json["id"]
         self.author = Author(message_json["author"])
-        self.guild_id = message_json("guild_id")
-        self.channel_id = message_json("channel_id")
-
+        self.guild_id = message_json["guild_id"]
+        self.channel_id = message_json["channel_id"]
+    
 class Author:
 
     def __init__(self, author):
