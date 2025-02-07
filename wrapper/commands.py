@@ -1,3 +1,5 @@
+from .message import Message
+
 class Command:
 
     def __init__(self, name, func):
@@ -8,7 +10,6 @@ class CommandHandler:
 
     def __init__(self, prefix="!"):
         self.prefix = prefix
-        
         self.commands = {}
     
     def command(self, name):
@@ -19,21 +20,17 @@ class CommandHandler:
         return wrapper
     
     async def handle_command(self, message, bot):
-        content = message["content"]
-        print(f"Received message: {content}")  # Debugging message content
-        if not message["content"].startswith(self.prefix):
-            print("Check 1")
+        
+        if not message.content.startswith(self.prefix):
             return
         
-        args = message["content"][len(self.prefix):].split()
+        args = message.content[len(self.prefix):].split()
         command_name = args.pop(0).lower()
-        print("Check 2")
         if command_name in self.commands:
-            command = self.commands[command_name]
-            await command.func(bot, message, args)
             try:
-                print(f"Executing command: {command_name}")
+                command = self.commands[command_name]
+                await command.func(bot, message, args)
             except Exception as e:
-                print(f"Error while executing command '{command_name}': {e}")
+                print(e)
         else:
             print(f"Command '{command_name}' not found.")

@@ -11,7 +11,9 @@ class DiscordGateaway:
         self.token = token
         self.session_id = None
         self.on_message_callback = on_message_callback
+        self.bot_id = None
     
+    # Connect to the discord gateaway
     async def connect(self):
 
         async with websockets.connect(self.GATEAWAY_URL) as ws:
@@ -19,7 +21,8 @@ class DiscordGateaway:
             await self.identify(ws)
             async for message in ws:
                 await self.handle_event(ws, message)
-            
+
+    # Used to identify the client  
     async def identify(self, ws):
         
         payload = {
@@ -35,20 +38,25 @@ class DiscordGateaway:
             }
         }
         await ws.send(json.dumps(payload))
+        response = json.loads(await ws.recv())
     
+    # Handling gateaway events
     async def handle_event(self, ws, message):
 
         data = json.loads(message)
-        print(message)
+
         if data["op"] == 10:  # Hello event (keep connection alive)
             self.session_id = data["d"].get("session_id")
             heartbeat_interval = data["d"]["heartbeat_interval"] / 1000
             asyncio.create_task(self.heartbeat(ws, heartbeat_interval))
-        elif data["t"] == "MESSAGE_CREATE":
+        elif data["t"] == "READY":
+            self.bot_id = data["d"]["user"]["id"]
+            print(f"Bot Started, ID: {self.bot_id}")
+        elif data["t"] == "MESSAGE_CREATE": # Message created event
             if self.on_message_callback:
                 await self.on_message_callback(data["d"])
-                print(f"New message: {data['d']['content']}")
     
+    # Manages the heartbeat between the bot and Discord
     async def heartbeat(self, ws, interval):
 
         while True:
