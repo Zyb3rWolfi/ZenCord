@@ -36,7 +36,7 @@ class DiscordClient:
     
     # Runs the command handler everytime theres a message
     async def on_message(self, message):
-        message = Message(message)
+        message = Message(message, self.token)
         if (self.gateaway.bot_id == message.author.id):
             return
         await self.command_handler.handle_command(message, self)

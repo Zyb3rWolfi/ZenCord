@@ -3,6 +3,7 @@ import websockets
 import aiohttp
 import json
 from .types.guild import Guild
+from .types.guild import Member
 from .types.message import Message
 
 class DiscordGateaway:
@@ -33,7 +34,7 @@ class DiscordGateaway:
             "op": 2,
             "d": {
                 "token": self.token,
-                "intents": 513 | (1 << 15),  # Adjust intents based on needed events
+                "intents": 513 | (1 << 15 | (1 << 0) | (1 << 1)),  # Adjust intents based on needed events
                 "properties": {
                     "$os": "linux",
                     "$browser": "wrapper",
@@ -44,6 +45,18 @@ class DiscordGateaway:
         await ws.send(json.dumps(payload))
         response = json.loads(await ws.recv())
     
+    async def request_guild_members(self, ws, guild_id):
+
+        payload = {
+        "op": 8,  # REQUEST_GUILD_MEMBERS
+        "d": {
+            "guild_id": guild_id,
+            "query": "",
+            "limit": 0  # 0 means "request all members"
+            }
+        }
+        await ws.send(json.dumps(payload))
+
     # Handling gateaway events
     async def handle_event(self, ws, message):
 
@@ -53,15 +66,34 @@ class DiscordGateaway:
             self.session_id = data["d"].get("session_id")
             heartbeat_interval = data["d"]["heartbeat_interval"] / 1000
             asyncio.create_task(self.heartbeat(ws, heartbeat_interval))
+
         elif data["t"] == "READY":
             self.bot_id = data["d"]["user"]["id"]
-            await self.event_handler("on_ready", data["d"])
+            await self.event_handler("on_ready", data["d"]) # on_ready Event
+
         elif data["t"] == "MESSAGE_CREATE": # Message created event
             if self.on_message_callback:
-                await self.event_handler("on_message", Message(data["d"], self.token))
+                await self.event_handler("on_message", Message(data["d"], self.token)) # on_message event
+                await self.on_message_callback(data["d"])
+
         elif data["t"] == "GUILD_CREATE":
             guild = Guild(data["d"])
             self.guilds[guild.id] = guild
+            await self.event_handler("on_guild_join", guild)
+            await self.request_guild_members(ws, guild.id)
+
+        elif data["t"] == "GUILD_MEMBERS_CHUNK": # Guild Members Event
+
+            guild_id = data["d"]["guild_id"]
+            guild = self.guilds.get(guild_id)
+            print("running")
+            if guild:
+                for member_data in data["d"]["members"]:
+                    member = Member(member_data)
+                    guild.members[member.id] = member
+            
+        elif data["t"] == "GUILD_MEMBER_ADD": # Member Join Event
+            pass
 
     
     # Manages the heartbeat between the bot and Discord
