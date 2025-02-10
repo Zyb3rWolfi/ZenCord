@@ -2,17 +2,19 @@ import asyncio
 import websockets
 import aiohttp
 import json
-from .guild import Guild
+from .types.guild import Guild
+from .types.message import Message
 
 class DiscordGateaway:
 
     GATEAWAY_URL = "wss://gateway.discord.gg/?v=10&encoding=json"
 
-    def __init__(self, token, on_message_callback):
+    def __init__(self, token, on_message_callback, handle_event):
         self.token = token
         self.session_id = None
         self.on_message_callback = on_message_callback
         self.bot_id = None
+        self.event_handler = handle_event
         self.guilds = {}
     
     # Connect to the discord gateaway
@@ -53,10 +55,10 @@ class DiscordGateaway:
             asyncio.create_task(self.heartbeat(ws, heartbeat_interval))
         elif data["t"] == "READY":
             self.bot_id = data["d"]["user"]["id"]
-            print(f"Bot Started, ID: {self.bot_id}")
+            await self.event_handler("on_ready", data["d"])
         elif data["t"] == "MESSAGE_CREATE": # Message created event
             if self.on_message_callback:
-                await self.on_message_callback(data["d"])
+                await self.event_handler("on_message", Message(data["d"], self.token))
         elif data["t"] == "GUILD_CREATE":
             guild = Guild(data["d"])
             self.guilds[guild.id] = guild

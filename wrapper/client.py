@@ -2,8 +2,8 @@ import asyncio
 from .http import DiscordHTTP
 from .gateaway import DiscordGateaway
 from .commands import CommandHandler
-from .message import Message
-from .guild import Guild
+from .types.message import Message
+from .types.guild import Guild
 
 class DiscordClient:
 
@@ -11,10 +11,21 @@ class DiscordClient:
         self.token = token # Bot token
         self.http = DiscordHTTP(token) # the HTTP class
         self.command_handler = CommandHandler(prefix) # Command handler class
-        self.gateaway = DiscordGateaway(token, self.on_message) # Discord gateaway class
+        self.gateaway = DiscordGateaway(token, self.on_message, self._handle_event) # Discord gateaway class
+        self.events = {}
 
 
-    # ??
+    def event(self, func):
+
+        self.events[func.__name__] = func
+        return func
+
+    async def _handle_event(self, event_name, data):
+        """Internal method to call registered events."""
+        if event_name in self.events:
+            await self.events[event_name](data)
+
+    # Manages the command decorater
     def command(self, name):
         return self.command_handler.command(name)
 
