@@ -36,17 +36,28 @@ class DiscordClient:
     
     # Runs the command handler everytime theres a message
     async def on_message(self, message):
-        message = Message(message, self.token)
-        if (self.gateaway.bot_id == message.author.id):
-            return
-        await self.command_handler.handle_command(message, self)
+        try:
+            message = Message(message, self.token)
+            if (self.gateaway.bot_id == message.author.id):
+                return
+            await self.command_handler.handle_command(message, self)
+        except Exception as e:
+            print(e)
 
     # Responsible for sending messages
     async def send_message(self, channel_id, content):
 
         await self.http.send_message(channel_id, content)
 
+    async def delete_message(self, channel_id, message_id):
+
+        await self.http.delete_message(channel_id, message_id)
+
     # Responsible for getting a guild object and returning it to the user using gateaway guilds dictionary
     def get_guild(self, guild_id):
 
         return self.gateaway.guilds[guild_id]
+    
+    def get_bot_id(self):
+
+        return self.gateaway.bot_id

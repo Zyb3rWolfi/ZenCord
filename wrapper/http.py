@@ -18,7 +18,14 @@ class DiscordHTTP:
             await asyncio.sleep(retry_after)
             return await self.request(method, endpoint, **kwargs)
         response.raise_for_status()
-        return response.json()
+
+        
+        try:
+            return response.json()
+        except:
+            return
     
     async def send_message(self, channel_id: str, content: str):
         return await self.request("POST", f"/channels/{channel_id}/messages", json={"content": content})
+    async def delete_message(self, channel_id: str, message_id: str): # /channels/{channel.id}/messages/{message.id}
+        await self.request("DELETE", f"/channels/{channel_id}/messages/{message_id}")

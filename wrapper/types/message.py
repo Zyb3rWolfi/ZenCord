@@ -16,7 +16,9 @@ class Message:
     # Sends a message in the same channel as the message using HTTP
     async def send_message(self, content):
         await self.http.send_message(self.channel_id, content)
-    
+    async def delete_message(self):
+        await self.http.delete_message(self.channel_id, self.id)
+
 class Author:
 
     def __init__(self, author):
