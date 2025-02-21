@@ -4,7 +4,7 @@ import aiohttp
 import json
 from .types.guild import Guild
 from .types.guild import Member
-from .types.message import Message
+from .message import Message
 
 class DiscordGateaway:
 
@@ -73,7 +73,7 @@ class DiscordGateaway:
 
         elif data["t"] == "MESSAGE_CREATE": # Message created event
             if self.on_message_callback:
-                await self.event_handler("on_message", Message(data["d"], self.token)) # on_message event
+                await self.event_handler("on_message", Message(data["d"])) # on_message event
                 await self.on_message_callback(data["d"])
 
         elif data["t"] == "GUILD_CREATE":
@@ -86,14 +86,20 @@ class DiscordGateaway:
 
             guild_id = data["d"]["guild_id"]
             guild = self.guilds.get(guild_id)
-            print("running")
             if guild:
                 for member_data in data["d"]["members"]:
                     member = Member(member_data)
                     guild.members[member.id] = member
-            
+                    
         elif data["t"] == "GUILD_MEMBER_ADD": # Member Join Event
-            pass
+            member = Member(data["d"])
+            await self.event_handler("on_member_join", member) # Runs the event handler
+            await self.request_guild_members(ws, data["d"]["guild_id"]) # Refreshing the list of members
+        
+        elif data["t"] == "GUILD_MEMBER_REMOVE":
+            member = Member(data["d"])
+            await self.event_handler("on_member_leave", member) # Runs the event handler
+            await self.request_guild_members(ws, data["d"]["guild_id"]) # Refreshing the list of members
 
     
     # Manages the heartbeat between the bot and Discord

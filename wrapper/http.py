@@ -1,5 +1,6 @@
 import httpx
 import asyncio
+import json
 
 class DiscordHTTP:
 
@@ -19,7 +20,7 @@ class DiscordHTTP:
             return await self.request(method, endpoint, **kwargs)
         response.raise_for_status()
 
-        
+
         try:
             return response.json()
         except:
@@ -29,3 +30,9 @@ class DiscordHTTP:
         return await self.request("POST", f"/channels/{channel_id}/messages", json={"content": content})
     async def delete_message(self, channel_id: str, message_id: str): # /channels/{channel.id}/messages/{message.id}
         await self.request("DELETE", f"/channels/{channel_id}/messages/{message_id}")
+    async def get_message(self, channel_id: str, message_id: str):
+        await self.request("GET", f"/channels/{channel_id}/messages/{message_id}")
+    async def get_messages(self, channel_id: str, message_id: str):
+        return await self.request("GET", f"/channels/{channel_id}/messages?limit=5")
+    async def get_channel(self, channel_id: str):
+        return await self.request("GET", f"/channels/{channel_id}")

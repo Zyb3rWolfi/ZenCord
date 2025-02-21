@@ -4,6 +4,9 @@ class Guild:
         
         self.id = guild_json["id"]
         self.name = guild_json["name"]
+        self.icon = guild_json["icon"]
+        self.guild_owner = guild_json["owner_id"]
+
         self.members = {}
     
         for member_data in guild_json.get("members", []):

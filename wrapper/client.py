@@ -1,8 +1,9 @@
 import asyncio
+import json
 from .http import DiscordHTTP
 from .gateaway import DiscordGateaway
 from .commands import CommandHandler
-from .types.message import Message
+from .message import Message
 from .types.guild import Guild
 
 class DiscordClient:
@@ -35,16 +36,16 @@ class DiscordClient:
         await asyncio.gather(self.gateaway.connect())
     
     # Runs the command handler everytime theres a message
-    async def on_message(self, message):
-        try:
-            message = Message(message, self.token)
+    async def on_message(self, message: Message):
+            message = Message(message)
             if (self.gateaway.bot_id == message.author.id):
                 return
             await self.command_handler.handle_command(message, self)
-        except Exception as e:
-            print(e)
 
-    # Responsible for sending messages
+
+
+    # Functions utilising HTTP requests
+
     async def send_message(self, channel_id, content):
 
         await self.http.send_message(channel_id, content)
@@ -52,8 +53,20 @@ class DiscordClient:
     async def delete_message(self, channel_id, message_id):
 
         await self.http.delete_message(channel_id, message_id)
+    
+    async def get_message(self, channel_id, message_id):
 
-    # Responsible for getting a guild object and returning it to the user using gateaway guilds dictionary
+        message = await self.http.get_message(channel_id, message_id)
+        return message
+    
+    async def get_messages(self, channel_id, message_id):
+
+        messages = await self.http.get_messages(channel_id, message_id)
+        messagess = Message(messages[0], self.token)
+        return messages[0]
+    
+    # Functions utilising the Discord Gateaway
+
     def get_guild(self, guild_id):
 
         return self.gateaway.guilds[guild_id]
@@ -61,3 +74,7 @@ class DiscordClient:
     def get_bot_id(self):
 
         return self.gateaway.bot_id
+
+    def get_channel(self, channel_id):
+        
+        return self.http.get_channel(channel_id)
