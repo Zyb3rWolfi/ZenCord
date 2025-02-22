@@ -2,7 +2,7 @@ import asyncio
 import json
 from .http import DiscordHTTP
 from .gateaway import DiscordGateaway
-from .commands import CommandHandler
+from .commands.commands import CommandHandler
 from .message import Message
 from .types.guild import Guild
 
@@ -36,11 +36,13 @@ class DiscordClient:
         await asyncio.gather(self.gateaway.connect())
     
     # Runs the command handler everytime theres a message
-    async def on_message(self, message: Message):
-            message = Message(message)
+    async def on_message(self, message: dict):
+            from .commands.context import Context
+            message = Message(message, self.http)
+            context = Context(message, self)
             if (self.gateaway.bot_id == message.author.id):
                 return
-            await self.command_handler.handle_command(message, self)
+            await self.command_handler.handle_command(context, self)
 
 
 

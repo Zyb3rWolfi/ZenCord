@@ -18,8 +18,8 @@ class CommandHandler:
             return func
         return wrapper
     
-    async def handle_command(self, message, bot):
-        
+    async def handle_command(self, context, bot):
+        message = context.message
         if not message.content.startswith(self.prefix):
             return
         
@@ -28,7 +28,7 @@ class CommandHandler:
         if command_name in self.commands:
             try:
                 command = self.commands[command_name]
-                await command.func(bot, message, args)
+                await command.func(bot, context, args)
             except Exception as e:
                 print(e)
         else:

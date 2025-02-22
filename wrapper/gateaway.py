@@ -73,7 +73,7 @@ class DiscordGateaway:
 
         elif data["t"] == "MESSAGE_CREATE": # Message created event
             if self.on_message_callback:
-                await self.event_handler("on_message", Message(data["d"])) # on_message event
+                await self.event_handler("on_message", data["d"]) # on_message event
                 await self.on_message_callback(data["d"])
 
         elif data["t"] == "GUILD_CREATE":
